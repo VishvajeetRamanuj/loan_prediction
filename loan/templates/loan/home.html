@@ -1,0 +1,8 @@
+<form method='post' action="{% url 'loan:predict_loan' %}"> {% csrf_token %}
+<button type=submit formmethod=post formtarget="{% url 'loan:predict_loan' %}">predict</button>
+</form>
+
+<form method='post' action="{% url 'loan:retrain' %}"> {% csrf_token %}
+<button>retrain</button>
+</form>
+
