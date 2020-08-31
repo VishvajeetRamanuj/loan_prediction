@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
+# In[9]:
 
 
 ############################################################################
@@ -12,7 +12,7 @@
 ############################################################################
 
 
-# In[3]:
+# In[1]:
 
 
 # importing necessory libreries
@@ -30,23 +30,16 @@ import joblib
 import pickle
 
 
-# In[4]:
+# In[2]:
 
 
 # reading data from file
 loan_ds = pd.read_csv('loan_ds.csv')
 
 
-# In[5]:
-
-
-# droping index as it is not feature and we are using diffrent index for spliting data
-loan_ds = loan_ds.drop('Loan_ID', axis=1)
-
-
 # # spliting data to train and test set
 
-# In[6]:
+# In[3]:
 
 
 split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
@@ -56,14 +49,14 @@ for train_index, test_index in split.split(loan_ds, loan_ds['Loan_Status']):
     strat_test_set = loan_ds.loc[test_index]
 
 
-# In[7]:
+# In[11]:
 
 
 # function for preprocessing data
 def preprocess_loan_ds(dataset):
-    if strat_test_set['Loan_Status'].iloc[0]:
+    if dataset['Loan_Status'].iloc[0]:
         print('spliting labels')
-        strat_test_set['Loan_Status'].iloc[0]
+        dataset['Loan_Status'].iloc[0]
         # spliting labels from data
         label = dataset['Loan_Status'].copy()
         data = dataset.drop('Loan_Status', axis=1)
@@ -75,6 +68,9 @@ def preprocess_loan_ds(dataset):
     # preprocessing data
     # filling balnk value with appropriate value and coverting to boolean datatype where only two options
     # first need to fill na values to desired one
+    
+    # droping index as it is not feature and we are using diffrent index for spliting data
+    data = data.drop('Loan_ID', axis=1)
 
     # converting dependent object to int
     data = data.replace('3+', '3')
@@ -147,7 +143,7 @@ def preprocess_loan_ds(dataset):
 
     new_ds.drop('Property_Area', axis=1, inplace=True)
     
-    if strat_test_set['Loan_Status'].iloc[0]:
+    if dataset['Loan_Status'].iloc[0]:
         return (new_ds, label)
     else:
         return new_ds
@@ -155,13 +151,20 @@ def preprocess_loan_ds(dataset):
     
 
 
-# In[8]:
+# In[12]:
+
+
+# train_data
+# train_data = train_data.drop('Loan_ID', axis=1)
+
+
+# In[13]:
 
 
 train_data, train_labels = preprocess_loan_ds(strat_train_set)
 
 
-# In[9]:
+# In[6]:
 
 
 # verifying proportation of stratified training set is the same as original dataset
@@ -174,7 +177,7 @@ loan_ds['Loan_Status'].value_counts() / len(loan_ds)
 
 # # Selecting Model and Training
 
-# In[10]:
+# In[14]:
 
 
 # training Random forest Regressor model
@@ -182,20 +185,20 @@ forest_reg = RandomForestRegressor(n_estimators=100, random_state=42)
 forest_reg.fit(train_data, train_labels)
 
 
-# In[11]:
+# In[15]:
 
 
 # saving traied model
 joblib.dump(forest_reg, 'forest_reg.pkl')
 
 
-# In[12]:
+# In[16]:
 
 
 test_data, test_labels = preprocess_loan_ds(strat_test_set)
 
 
-# In[13]:
+# In[20]:
 
 
 # if strat_test_set['Loan_Status'].iloc[0]:
@@ -203,7 +206,7 @@ test_data, test_labels = preprocess_loan_ds(strat_test_set)
 # strat_test_set['Loan_Status'].iloc[0]
 
 
-# In[14]:
+# In[21]:
 
 
 # # preprocessing test data
@@ -262,28 +265,18 @@ test_data, test_labels = preprocess_loan_ds(strat_test_set)
 # strat_test_label = strat_test_label == 'Y'
 
 
-# In[15]:
+# In[17]:
 
 
 predictions = forest_reg.predict(test_data)
 
 
-# In[16]:
+# In[18]:
 
 
 # predictions
 score = accuracy_score(test_labels, predictions.round(), normalize=False)
 score # there must be something wrong
-
-
-# In[18]:
-
-
-# demo new label prediction
-a = [['Urban']]
-type(a)
-# print(a)
-# cat_encoder.transform(a)
 
 
 # In[21]:
@@ -298,6 +291,16 @@ forest_reg = joblib.load("forest_reg.pkl")
 
 
 # In[22]:
+
+
+# demo new label prediction
+a = [['Urban']]
+type(a)
+# print(a)
+cat_encoder.transform(a)
+
+
+# In[23]:
 
 
 # Single Prediction
@@ -364,7 +367,7 @@ def loan_grant_decision(ID, ApplicantIncome, CoapplicantIncome, Property_Area, G
         return False # do not grant loan
 
 
-# In[23]:
+# In[24]:
 
 
 result = loan_grant_decision(ID, ApplicantIncome, CoapplicantIncome, Property_Area, Gender=Gender, Married=Married, 
@@ -373,35 +376,44 @@ result = loan_grant_decision(ID, ApplicantIncome, CoapplicantIncome, Property_Ar
                              Loan_Amount_Term=Loan_Amount_Term, Credit_History=Credit_History)
 
 
-# In[24]:
+# In[26]:
 
 
-result
+# result
 
 
-# In[25]:
+# In[27]:
 
 
 # Retrain
+def retrain(new_ds_file):
+    # reading new_csv
+    new_dataset = pd.read_csv(new_ds_file)
+
+    # droping index as it is not feature and we are using diffrent index for spliting data
+    new_dataset = new_dataset.drop('Loan_ID', axis=1)
+    
+    old_dataset = pd.read_csv('loan_ds.csv')
+
+    combine_ds = pd.concat([old_dataset, new_dataset])
+    # store combine_ds
+
+    # do preprocessing
+    combine_ds_data, combine_ds_labels = preprocess_loan_ds(combine_ds)
+
+    # we are creating new model which will be trained on all data
+    forest_reg = RandomForestRegressor(n_estimators=100, random_state=42) 
+    forest_reg.fit(train_data, train_labels)
+
+    # saving new model
+    joblib.dump(forest_reg, 'forest_reg.pkl')
+    return True
 
 
+# In[28]:
 
-# reading new_csv
-new_dataset = pd.read_csv('loan_ds_2.csv')
 
-# droping index as it is not feature and we are using diffrent index for spliting data
-new_dataset = new_dataset.drop('Loan_ID', axis=1)
-
-# spliting data into training and test set
-split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
-
-for train_index, test_index in split.split(loan_ds, loan_ds['Loan_Status']):
-    strat_train_set = loan_ds.loc[train_index]
-    strat_test_set = loan_ds.loc[test_index]
-
-# pre process data    
-train_data, train_labels = preprocess_loan_ds(strat_train_set)
-
+retrain('loan_ds_2.csv')
 
 
 # In[ ]:
@@ -413,28 +425,4 @@ train_data, train_labels = preprocess_loan_ds(strat_train_set)
 # do preprocessing
 # do training
 # save new preprcess data, and model for future reference
-
-
-# In[28]:
-
-
-old_dataset = pd.read_csv('loan_ds.csv')
-
-combine_ds = pd.concat([old_dataset, new_dataset])
-
-# do preprocessing
-combine_ds_data, combine_ds_labels = preprocess_loan_ds(combine_ds)
-
-# we are creating new model which will be trained on all data
-forest_reg = RandomForestRegressor(n_estimators=100, random_state=42) 
-forest_reg.fit(train_data, train_labels)
-
-# saving new model
-joblib.dump(forest_reg, 'forest_reg.pkl')
-
-
-# In[ ]:
-
-
-
 

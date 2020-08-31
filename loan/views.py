@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from .models import LoanPredictionModel
 from .forms import LoanPredictionForm
 
-from .loan_prediction import loan_grant_decision, 
+from .loan_prediction import loan_grant_decision, retrain
 
 # Create your views here.
 def home(request):
@@ -30,25 +30,29 @@ def process_prediction(request, *args, **kwargs):
             credit_history = request.POST.get("credit_history","")
             property_area = request.POST.get("property_area","")
 
-            # calling predict
-            # result = loan_grant_decision(ID, ApplicantIncome, CoapplicantIncome, Property_Area, Gender=Gender, Married=Married, 
-            #                  Dependents=Dependents, Education = Education,
-            #                  Self_Employed=Self_Employed, LoanAmount=LoanAmount,
-            #                  Loan_Amount_Term=Loan_Amount_Term, Credit_History=Credit_History)
             result = loan_grant_decision(loan_id, applicant_income,coapplicant_income,property_area, gender, married,
                                          dependents, education, self_employed, loan_amount, loan_amount_term, credit_history)
+            # print(result) # hear is bug it is always return False the same method from another program return proper result
             
             if result:
                 return HttpResponse("<h1>give loan</h1>")
             else:
                 return HttpResponse("<h1>do not give loan</h1>")
-
-def retrain(request, *args, **kwargs):
-    pass
-
-def process_retrain(request, *args, **kwargs):
-    if request.method == "POST":
-        new_csv = request.FILES['new_csv'].read()
-        # retraining
     else:
-        return render(request, '#')
+        return HttpResponse("<h1>Try again with post</h1>")
+
+def retrain_view(request, *args, **kwargs):
+    return render(request, 'loan/retrain.html')
+
+def process_retrain(request):
+    if request.method == "POST":
+        new_csv = request.FILES['new_csv'].name
+        # retraining
+        print(new_csv)
+        result = retrain(new_csv) # True
+        if result:
+            return HttpResponse("<h1>Training is done successfully</h1>")
+        else:
+            return HttpResponse("<h1>Try again uploading file</h1>")
+    else:
+        return HttpResponse("<h1>Try uploading file using submit</h1>") # render to home

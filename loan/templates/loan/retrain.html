@@ -1,6 +1,6 @@
 select a file to retrain
 
-<form enctype="multipart/form-data" action="/my/url/" method="post">
+<form enctype="multipart/form-data" action="{%url 'loan:process_retrain' %}" method="post"> {% csrf_token %}
     <input type="file"  name="new_csv"/>
     <input type="submit" value="Submit" />
 </form>
