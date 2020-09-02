@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[9]:
+# In[1]:
 
 
 ############################################################################
@@ -12,14 +12,12 @@
 ############################################################################
 
 
-# In[1]:
+# In[2]:
 
 
 # importing necessory libreries
 import pandas as pd
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import sklearn
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.impute import SimpleImputer
@@ -30,7 +28,7 @@ import joblib
 import pickle
 
 
-# In[2]:
+# In[3]:
 
 
 # reading data from file
@@ -39,7 +37,7 @@ loan_ds = pd.read_csv('loan_ds.csv')
 
 # # spliting data to train and test set
 
-# In[3]:
+# In[4]:
 
 
 split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
@@ -49,13 +47,13 @@ for train_index, test_index in split.split(loan_ds, loan_ds['Loan_Status']):
     strat_test_set = loan_ds.loc[test_index]
 
 
-# In[11]:
+# In[5]:
 
 
 # function for preprocessing data
 def preprocess_loan_ds(dataset):
     if dataset['Loan_Status'].iloc[0]:
-        print('spliting labels')
+#         print('spliting labels')
         dataset['Loan_Status'].iloc[0]
         # spliting labels from data
         label = dataset['Loan_Status'].copy()
@@ -104,19 +102,11 @@ def preprocess_loan_ds(dataset):
     data['Loan_Amount_Term'] = data['Loan_Amount_Term'].astype('int')
 
     # preprocessing LoanAmount
-#     loan_amt_imputer = SimpleImputer(strategy='mean')
-#     strat_train_loan_amt = data['LoanAmount'].copy()
-#     strat_train_loan_amt_1 = strat_train_loan_amt.to_numpy().reshape(-1,1)
-#     loan_amt_imputer.fit(strat_train_loan_amt_1)
-
-#     strat_train_loan_amt_trans = loan_amt_imputer.transform(strat_train_loan_amt_1)
-
     data = data.replace('3+', '3')
     median_dependent = data['Dependents'].median()
     data['Dependents'].fillna(median_dependent, inplace=True)
     data['Dependents'] = data['Dependents'].astype('int')
     
-#     strat_train_loan_amt.mean()
     loan_amount_mean = data['LoanAmount'].mean()
     data['LoanAmount'] = data['LoanAmount'].fillna(loan_amount_mean)
     data['LoanAmount'] = data['LoanAmount'].astype('int')
@@ -131,11 +121,6 @@ def preprocess_loan_ds(dataset):
     with open('encoder.txt', 'wb') as f:
         pickle.dump(cat_encoder, f)
 
-#     data.drop('LoanAmount', axis=1, inplace=True)
-
-    # combine data
-#     loan_amt_df = pd.DataFrame(strat_train_loan_amt_trans, index=data.index, columns=['LoanAmount'])
-#     strat_train_cat_array = strat_train_cat_encoded
     strat_train_cat_df = pd.DataFrame(strat_train_cat_encoded, index=data.index, columns=['Rural', 'Semiurban', 'Urban'])
 
     frames = [data, strat_train_cat_df]
@@ -151,20 +136,20 @@ def preprocess_loan_ds(dataset):
     
 
 
-# In[12]:
+# In[6]:
 
 
 # train_data
 # train_data = train_data.drop('Loan_ID', axis=1)
 
 
-# In[13]:
+# In[7]:
 
 
 train_data, train_labels = preprocess_loan_ds(strat_train_set)
 
 
-# In[6]:
+# In[8]:
 
 
 # verifying proportation of stratified training set is the same as original dataset
@@ -177,7 +162,7 @@ loan_ds['Loan_Status'].value_counts() / len(loan_ds)
 
 # # Selecting Model and Training
 
-# In[14]:
+# In[9]:
 
 
 # training Random forest Regressor model
@@ -185,93 +170,26 @@ forest_reg = RandomForestRegressor(n_estimators=100, random_state=42)
 forest_reg.fit(train_data, train_labels)
 
 
-# In[15]:
+# In[10]:
 
 
 # saving traied model
 joblib.dump(forest_reg, 'forest_reg.pkl')
 
 
-# In[16]:
+# In[11]:
 
 
 test_data, test_labels = preprocess_loan_ds(strat_test_set)
 
 
-# In[20]:
-
-
-# if strat_test_set['Loan_Status'].iloc[0]:
-#     print('yes')
-# strat_test_set['Loan_Status'].iloc[0]
-
-
-# In[21]:
-
-
-# # preprocessing test data
-# strat_test_label = strat_test_set['Loan_Status'].copy()
-# strat_test_data = strat_test_set.drop('Loan_Status', axis=1)
-
-# # converting dependent object to int
-# strat_test_data = strat_test_data.replace('3+', '3')
-# strat_test_data['Dependents'].fillna(median_dependent, inplace=True)
-# strat_test_data['Dependents'] = strat_test_data['Dependents'].astype('int')
-
-# # preprocessing Married
-# strat_test_data['Married'].fillna('Yes', inplace=True)
-
-# # converting object to boolean
-# strat_test_data.loc[:,'Married'] = strat_test_data['Married'] == 'Yes'
-
-# # preprocessing Gender
-# strat_test_data['Gender'].fillna('Male', inplace=True)
-# strat_test_data.loc[:, 'Gender'] = strat_test_data['Gender'] == 'Male'
-
-# # preprocessing Education
-# strat_test_data.loc[:, 'Education'] = strat_test_data['Education'] == 'Graduate'
-
-# # preprocessing Self_Employed
-# strat_test_data['Self_Employed'].fillna('No', inplace=True)
-# strat_test_data.loc[:, 'Self_Employed'] = strat_test_data['Self_Employed'] == 'Yes'
-
-# # preprocessing Credit_History
-# strat_test_data['Credit_History'].fillna(1, inplace=True)
-# strat_test_data.loc[:, 'Credit_History'] = strat_test_data['Credit_History'] == 1
-
-# # preprocessing Loan_Amount_Term
-# strat_test_data['Loan_Amount_Term'].fillna(360, inplace=True)
-# strat_test_data['Loan_Amount_Term'] = strat_test_data['Loan_Amount_Term'].astype('int')
-
-# mean = 147.30997877
-# # LoanAmout
-# strat_test_data['LoanAmount'].fillna(mean, inplace=True)
-
-# # preprocessing Property_Area
-# strat_test_cat = strat_test_data[['Property_Area']]
-# strat_test_cat_encoded = cat_encoder.transform(strat_test_cat)
-
-# # combining encoded category with dataset
-# strat_test_cat_array = strat_test_cat_encoded
-# strat_test_cat_df = pd.DataFrame(strat_test_cat_array, index=strat_test_data.index, columns=['Rural', 'Semiurban', 'Urban'])
-
-# frames = [strat_test_data, strat_test_cat_df]
-# new_ds_test = pd.concat(frames, axis=1)
-
-# new_ds_test.drop('Property_Area', axis=1, inplace=True)
-
-# # new_ds
-
-# strat_test_label = strat_test_label == 'Y'
-
-
-# In[17]:
+# In[14]:
 
 
 predictions = forest_reg.predict(test_data)
 
 
-# In[18]:
+# In[15]:
 
 
 # predictions
@@ -279,7 +197,7 @@ score = accuracy_score(test_labels, predictions.round(), normalize=False)
 score # there must be something wrong
 
 
-# In[21]:
+# In[16]:
 
 
 # loading encoder
@@ -290,7 +208,7 @@ cat_encoder = pickle.load(file)
 forest_reg = joblib.load("forest_reg.pkl")
 
 
-# In[22]:
+# In[17]:
 
 
 # demo new label prediction
@@ -300,7 +218,7 @@ type(a)
 cat_encoder.transform(a)
 
 
-# In[23]:
+# In[18]:
 
 
 # Single Prediction
@@ -335,7 +253,6 @@ def loan_grant_decision(ID, ApplicantIncome, CoapplicantIncome, Property_Area, G
                              ])
 
     # converting object to boolean
-    
     loan_data.loc[:, 'Married'] = loan_data['Married'] == 'Yes'
 
     # preprocessing Gender
@@ -367,7 +284,7 @@ def loan_grant_decision(ID, ApplicantIncome, CoapplicantIncome, Property_Area, G
         return False # do not grant loan
 
 
-# In[24]:
+# In[19]:
 
 
 result = loan_grant_decision(ID, ApplicantIncome, CoapplicantIncome, Property_Area, Gender=Gender, Married=Married, 
@@ -376,13 +293,13 @@ result = loan_grant_decision(ID, ApplicantIncome, CoapplicantIncome, Property_Ar
                              Loan_Amount_Term=Loan_Amount_Term, Credit_History=Credit_History)
 
 
-# In[26]:
+# In[20]:
 
 
 # result
 
 
-# In[27]:
+# In[21]:
 
 
 # Retrain
@@ -410,19 +327,8 @@ def retrain(new_ds_file):
     return True
 
 
-# In[28]:
+# In[22]:
 
 
 retrain('loan_ds_2.csv')
-
-
-# In[ ]:
-
-
-# store previous pre process data in csv
-# load previous pre_process data
-# combine both dataframe
-# do preprocessing
-# do training
-# save new preprcess data, and model for future reference
 
