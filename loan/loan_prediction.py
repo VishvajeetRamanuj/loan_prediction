@@ -18,6 +18,8 @@
 # importing necessory libreries
 import pandas as pd
 import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import sklearn
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.impute import SimpleImputer
@@ -26,18 +28,26 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import accuracy_score
 import joblib
 import pickle
+import os
 
 
-# In[3]:
+# In[4]:
+
+
+# getting absolute path
+THIS_FOLDER = os.getcwd() # os.path.dirname(os.path.abspath(__file__))
+
+
+# In[6]:
 
 
 # reading data from file
-loan_ds = pd.read_csv('loan_ds.csv')
+loan_ds = pd.read_csv(os.path.join(THIS_FOLDER,'loan_ds.csv'))
 
 
 # # spliting data to train and test set
 
-# In[4]:
+# In[7]:
 
 
 split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
@@ -47,7 +57,7 @@ for train_index, test_index in split.split(loan_ds, loan_ds['Loan_Status']):
     strat_test_set = loan_ds.loc[test_index]
 
 
-# In[5]:
+# In[8]:
 
 
 # function for preprocessing data
@@ -101,7 +111,6 @@ def preprocess_loan_ds(dataset):
     data['Loan_Amount_Term'].fillna(360, inplace=True)
     data['Loan_Amount_Term'] = data['Loan_Amount_Term'].astype('int')
 
-    # preprocessing LoanAmount
     data = data.replace('3+', '3')
     median_dependent = data['Dependents'].median()
     data['Dependents'].fillna(median_dependent, inplace=True)
@@ -118,7 +127,7 @@ def preprocess_loan_ds(dataset):
     strat_train_cat_encoded = cat_encoder.fit_transform(strat_train_cat)
     
     # saving encoder
-    with open('encoder.txt', 'wb') as f:
+    with open(os.path.join(THIS_FOLDER,'encoder.txt'), 'wb') as f:
         pickle.dump(cat_encoder, f)
 
     strat_train_cat_df = pd.DataFrame(strat_train_cat_encoded, index=data.index, columns=['Rural', 'Semiurban', 'Urban'])
@@ -136,33 +145,33 @@ def preprocess_loan_ds(dataset):
     
 
 
-# In[6]:
+# In[9]:
 
 
 # train_data
 # train_data = train_data.drop('Loan_ID', axis=1)
 
 
-# In[7]:
+# In[10]:
 
 
 train_data, train_labels = preprocess_loan_ds(strat_train_set)
 
 
-# In[8]:
+# In[11]:
 
 
 # verifying proportation of stratified training set is the same as original dataset
-print('train set')
-strat_train_set['Loan_Status'].value_counts() / len(strat_train_set)
+# print('train set')
+# strat_train_set['Loan_Status'].value_counts() / len(strat_train_set)
 
-print('original')
-loan_ds['Loan_Status'].value_counts() / len(loan_ds)
+# print('original')
+# loan_ds['Loan_Status'].value_counts() / len(loan_ds)
 
 
 # # Selecting Model and Training
 
-# In[9]:
+# In[12]:
 
 
 # training Random forest Regressor model
@@ -170,45 +179,45 @@ forest_reg = RandomForestRegressor(n_estimators=100, random_state=42)
 forest_reg.fit(train_data, train_labels)
 
 
-# In[10]:
+# In[13]:
 
 
 # saving traied model
-joblib.dump(forest_reg, 'forest_reg.pkl')
-
-
-# In[11]:
-
-
-test_data, test_labels = preprocess_loan_ds(strat_test_set)
+joblib.dump(forest_reg, os.path.join(THIS_FOLDER,'forest_reg.pkl'))
 
 
 # In[14]:
 
 
-predictions = forest_reg.predict(test_data)
+test_data, test_labels = preprocess_loan_ds(strat_test_set)
 
 
 # In[15]:
 
 
-# predictions
-score = accuracy_score(test_labels, predictions.round(), normalize=False)
-score # there must be something wrong
+predictions = forest_reg.predict(test_data)
 
 
 # In[16]:
 
 
-# loading encoder
-file = open('encoder.txt', 'rb')
-cat_encoder = pickle.load(file)
-
-# loading model
-forest_reg = joblib.load("forest_reg.pkl")
+# predictions
+score = accuracy_score(test_labels, predictions.round(), normalize=False)
+# score # there must be something wrong
 
 
 # In[17]:
+
+
+# loading encoder
+file = open(os.path.join(THIS_FOLDER,'encoder.txt'), 'rb')
+cat_encoder = pickle.load(file)
+
+# loading model
+forest_reg = joblib.load(os.path.join(THIS_FOLDER,"forest_reg.pkl"))
+
+
+# In[18]:
 
 
 # demo new label prediction
@@ -218,7 +227,7 @@ type(a)
 cat_encoder.transform(a)
 
 
-# In[18]:
+# In[19]:
 
 
 # Single Prediction
@@ -253,6 +262,7 @@ def loan_grant_decision(ID, ApplicantIncome, CoapplicantIncome, Property_Area, G
                              ])
 
     # converting object to boolean
+    
     loan_data.loc[:, 'Married'] = loan_data['Married'] == 'Yes'
 
     # preprocessing Gender
@@ -284,19 +294,13 @@ def loan_grant_decision(ID, ApplicantIncome, CoapplicantIncome, Property_Area, G
         return False # do not grant loan
 
 
-# In[19]:
+# In[20]:
 
 
 result = loan_grant_decision(ID, ApplicantIncome, CoapplicantIncome, Property_Area, Gender=Gender, Married=Married, 
                              Dependents=Dependents, Education = Education,
                              Self_Employed=Self_Employed, LoanAmount=LoanAmount,
                              Loan_Amount_Term=Loan_Amount_Term, Credit_History=Credit_History)
-
-
-# In[20]:
-
-
-# result
 
 
 # In[21]:
@@ -310,7 +314,7 @@ def retrain(new_ds_file):
     # droping index as it is not feature and we are using diffrent index for spliting data
     new_dataset = new_dataset.drop('Loan_ID', axis=1)
     
-    old_dataset = pd.read_csv('loan_ds.csv')
+    old_dataset = pd.read_csv(os.path.join(THIS_FOLDER,'loan_ds.csv'))
 
     combine_ds = pd.concat([old_dataset, new_dataset])
     # store combine_ds
@@ -323,7 +327,7 @@ def retrain(new_ds_file):
     forest_reg.fit(train_data, train_labels)
 
     # saving new model
-    joblib.dump(forest_reg, 'forest_reg.pkl')
+    joblib.dump(forest_reg, os.path.join(THIS_FOLDER,'forest_reg.pkl'))
     return True
 
 
