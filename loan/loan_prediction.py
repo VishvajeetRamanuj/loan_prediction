@@ -33,7 +33,7 @@ import os
 
 
 # getting absolute path
-THIS_FOLDER = os.getcwd() # os.path.dirname(os.path.abspath(__file__))
+THIS_FOLDER = os.path.dirname(os.path.abspath(__file__)) # os.getcwd() # 
 
 
 # In[6]:
