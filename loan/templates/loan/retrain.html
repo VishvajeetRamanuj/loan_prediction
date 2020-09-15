@@ -1,6 +1,11 @@
-select a file to retrain
+<h1 align=center>Retrain Model Using New Data</h2>
 
+<table align=center cellpadding=10 border=5>
 <form enctype="multipart/form-data" action="{%url 'loan:process_retrain' %}" method="post"> {% csrf_token %}
-    <input type="file"  name="new_csv"/>
-    <input type="submit" value="Submit" />
+<tr>
+    <td>select a file to retrain
+    <td><input type="file"  name="new_csv"/>
+<tr>
+    <th colspan=2><input type="submit" value="Submit" />
 </form>
+</table>

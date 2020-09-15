@@ -1,8 +1,17 @@
-<form method='post' action="{% url 'loan:predict_loan' %}"> {% csrf_token %}
-<button type=submit formmethod=post formtarget="{% url 'loan:predict_loan' %}">predict</button>
+<h1 align=center>Loan Prediction</h1>
+
+<p> The main purpose of this application is to predict wheter should we give loan to client or not based on the data we gethered from previously given loan. You can do prediction by clicking prediction button bellow</p>
+
+<p>You can also train model with new data gethered in csv by clicking on retrain button</p>
+
+<br><br>
+
+<div align=center>
+<form method='get' action="{% url 'loan:predict_loan' %}"> {% csrf_token %}
+<button type=submit>predict</button>
 </form>
 
 <form method='post' action="{% url 'loan:retrain' %}"> {% csrf_token %}
 <button>retrain</button>
 </form>
-
+</div>
